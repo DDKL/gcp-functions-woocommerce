@@ -64,10 +64,10 @@ def process_orders(event, context):
         last_processed_month = 1
 
     if year_doc.exists:
-        last_processed_year = year_doc.to_dict().get('last_processed_year', 2015)
+        last_processed_year = year_doc.to_dict().get('last_processed_year', 2020)
     else:
         print(f"No existing document for {site_name}, starting from the beginning.")
-        last_processed_year = 2015
+        last_processed_year = 2020
 
     # Fetch the next batch of orders in ascending order
     current_page = last_processed_page + 1
@@ -89,7 +89,8 @@ def process_orders(event, context):
         "after": start_date_str,
         "before": end_date_str,
         "page": current_page, 
-        "order": "asc"
+        "order": "asc",
+        "per_page": 20
     }).json()
 
     print(f"Fetched {len(orders)} orders from WooCommerce for site: {site_name}")
@@ -109,7 +110,7 @@ def process_orders(event, context):
     state_doc_ref.set({'last_processed_page': current_page})
 
     # Handle cases where there are no more orders
-    if len(orders) < 10:
+    if len(orders) < 20:
         state_doc_ref.set({'last_processed_page': 0})
         print(f"ALL ORDERS COMPLETED for {site_name}")
         # Move to the next month
