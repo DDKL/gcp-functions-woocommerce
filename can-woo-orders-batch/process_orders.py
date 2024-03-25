@@ -47,8 +47,9 @@ def process_orders(event, context):
     state_doc_ref = db.collection(f'{site_name}-processing_state').document('woocommerce_orders')
     month_doc_ref = db.collection(f'{site_name}-processing_state').document('month')
     year_doc_ref = db.collection(f'{site_name}-processing_state').document('year')
-    #state_doc = state_doc_ref.get()
-    state_doc, month_doc, year_doc = db.get_all([state_doc_ref, month_doc_ref, year_doc_ref])
+    state_doc = state_doc_ref.get()
+    month_doc = month_doc_ref.get()
+    year_doc = year_doc_ref.get()
 
     # Check if the document exists
     if state_doc.exists:
