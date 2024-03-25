@@ -21,7 +21,7 @@ key = os.environ.get('consumer_key')
 secret = os.environ.get('consumer_secret')
 
 wcapi = API(
-  url='https://iheartcats.com',
+  url='https://iheartdogs.com',
   consumer_key=key,
   consumer_secret=secret,
   wp_api=True,
@@ -37,7 +37,7 @@ def process_orders(event, context):
     if 'data' in event:
         message_data = base64.b64decode(event['data']).decode('utf-8')
         data = json.loads(message_data)
-        site_name = data.get('site_name') if data else 'iHeartCats'
+        site_name = data.get('site_name') if data else 'iHeartDogs'
     else:
         print("No data found in event")
         return
