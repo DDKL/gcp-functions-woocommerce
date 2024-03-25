@@ -13,14 +13,14 @@ from woocommerce import API
 storage_client = storage.Client()
 db = firestore.Client()
 
-bucket = storage_client.get_bucket('hlm-woocommerce')
+bucket_name = os.environ.get('bucket_name')
+bucket = storage_client.get_bucket(bucket_name)
 
 key = os.environ.get('consumer_key')
 secret = os.environ.get('consumer_secret')
-bucket_name = os.environ.get('bucket_name')
 
 wcapi = API(
-  url=bucket_name,
+  url='https://cannanine.com',
   consumer_key=key,
   consumer_secret=secret,
   wp_api=True,
