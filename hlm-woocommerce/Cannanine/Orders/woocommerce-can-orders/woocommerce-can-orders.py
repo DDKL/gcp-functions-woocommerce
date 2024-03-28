@@ -1,4 +1,3 @@
-import base64
 import functions_framework
 import os
 import json
