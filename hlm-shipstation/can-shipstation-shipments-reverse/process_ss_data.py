@@ -69,7 +69,7 @@ def process_ss_data(cloud_event):
 
     # shipDateStart, shipDateEnd, pageSize, page, includeShipmentItems
     # url = f"https://ssapi.shipstation.com/shipments?storeId={store_id}&sortBy=ShipDate&sortDir=DESC"
-    url = f"https://ssapi.shipstation.com/shipments?storeId={store_id}&sortBy=ShipDate&shipDateStart={start_date}&shipDateEnd={end_date}&page={current_page}&includeShipmentItems=true&pageSize=50"
+    url = f"https://ssapi.shipstation.com/shipments?storeId={store_id}&sortBy=ShipDate&shipDateStart={start_date}&shipDateEnd={end_date}&page={current_page}&includeShipmentItems=true"
 
     response = requests.get(url, headers=headers)
     shipments = response.json().get('shipments', [])
