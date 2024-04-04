@@ -1,0 +1,43 @@
+import base64
+import functions_framework
+import pandas as pd 
+from datetime import datetime
+from google.cloud import storage
+import os
+import json
+
+# Initialize Google Cloud Storage client
+storage_client = storage.Client()
+bucket_name = os.environ.get('bucket_name')
+bucket = storage_client.bucket(bucket_name)
+site_name = 'Cannanine'
+
+current_year, current_month = datetime.now().year, datetime.now().month
+
+def process_blob_to_csv(blob):
+    # Read JSON data from blob
+    json_bytes = blob.download_as_bytes()
+    data = json.loads(json_bytes.decode('utf-8'))
+    
+    # Convert JSON to Pandas DataFrame
+    df = pd.json_normalize(data)
+
+    # Process DataFrame (e.g., drop columns, transform, etc.)
+
+    # Convert DataFrame to CSV
+    csv_string = df.to_csv(index=False)
+    
+    # Upload to Cloud Storage as CSV
+    csv_blob = bucket.blob(blob.name.replace('.json', '.csv'))
+    csv_blob.upload_from_string(csv_string, content_type='text/csv')
+
+# Triggered from a message on a Cloud Pub/Sub topic
+@functions_framework.cloud_event
+def process_json_to_csv(cloud_event):
+    print(base64.b64decode(cloud_event.data["message"]["data"]))
+
+    path_name = f'{site_name}/Processed/Finance/{current_year}/{current_month}/'
+    blobs = storage_client.list_blobs(bucket_name, prefix=path_name, max_results=10)
+
+    for blob in blobs:
+        process_blob_to_csv(blob)
