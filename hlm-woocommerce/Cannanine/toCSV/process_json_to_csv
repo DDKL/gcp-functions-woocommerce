@@ -66,7 +66,7 @@ def process_blob_to_csv(blob):
     # Process DataFrame (e.g., drop columns, transform, etc.)
     df['total_cogs'] = df['meta_data'].apply(extract_wc_cog_order_total_cost)
     df['total_refunds'] = df['refunds'].apply(extract_total_refunds)
-    df['transaction_cost'] = calculate_transaction_costs(df['total'], df['payment_method'])
+    df['transaction_cost'] = df.apply(lambda row: calculate_transaction_costs(pd.to_numeric(row['total']), row['payment_method']), axis=1)
 
     selected_columns = [
         "id", "status", "currency", "discount_total", "shipping_total",
@@ -96,7 +96,8 @@ def process_json_to_csv(cloud_event):
 
     path_name = f'{site_name}/Orders/Unprocessed/{current_year}/{current_month}'
 
-    blobs = storage_client.list_blobs(bucket_name, prefix=path_name, max_results=50)
+    # blobs = storage_client.list_blobs(bucket_name, prefix=path_name, max_results=50)
+    blobs = storage_client.list_blobs(bucket_name, prefix=path_name)
 
     if(blobs):
         for blob in blobs:
