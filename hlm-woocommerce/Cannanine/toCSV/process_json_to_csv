@@ -94,7 +94,7 @@ def process_blob_to_csv(blob):
 def process_json_to_csv(cloud_event):
     # print(base64.b64decode(cloud_event.data["message"]["data"]))
 
-    path_name = f'{site_name}/Orders/Unprocessed/{current_year}/{current_month}'
+    path_name = f'{site_name}/Orders/Processed/Finance/{current_year}/{current_month}'
 
     # blobs = storage_client.list_blobs(bucket_name, prefix=path_name, max_results=50)
     blobs = storage_client.list_blobs(bucket_name, prefix=path_name)
