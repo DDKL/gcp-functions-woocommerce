@@ -3,11 +3,13 @@ import functions_framework
 import pandas as pd 
 from datetime import datetime
 from google.cloud import storage
+from google.cloud import firestore
 import os
 import json
 
 # Initialize Google Cloud Storage client
 storage_client = storage.Client()
+db = firestore.Client()
 bucket_name = os.environ.get('bucket_name')
 bucket = storage_client.bucket(bucket_name)
 site_name = 'iHeartDogs'
@@ -98,13 +100,57 @@ def process_blob_to_csv(blob):
 
 @functions_framework.cloud_event
 def process_json_to_csv(cloud_event):
-    # print(base64.b64decode(cloud_event.data["message"]["data"]))
+    state_doc_ref = db.collection(f'{site_name}-processing_state').document('woocommerce_orders-gcspage')
+    state_doc = state_doc_ref.get()
 
-    path_name = f'{site_name}/Orders/Unprocessed/{current_year}/{current_month}'
+    # Check if the Firestore document exists
+    if state_doc.exists:
+        last_processed_blob = state_doc.to_dict().get('last_processed_blob', '')
+    else:
+        print(f"No existing document for {site_name}, starting from the beginning.")
+        last_processed_blob = ''
 
-    # blobs = storage_client.list_blobs(bucket_name, prefix=path_name, max_results=50)
+    path_name = f'{site_name}/Orders/Unprocessed/{current_year}/{current_month}/'
     blobs = storage_client.list_blobs(bucket_name, prefix=path_name)
+    file_count = 0
 
-    if(blobs):
-        for blob in blobs:
+    for blob in blobs:
+        # Process only if the blob is after the last processed one
+        if blob.name > last_processed_blob:
             process_blob_to_csv(blob)
+            last_processed_blob = blob.name
+            file_count += 1
+            if file_count >= 1000:
+                break
+
+    # Update the last processed blob in Firestore
+    state_doc_ref.set({'last_processed_blob': last_processed_blob})
+
+
+# @functions_framework.cloud_event
+# def process_json_to_csv(cloud_event):
+#     # print(base64.b64decode(cloud_event.data["message"]["data"]))
+#     state_doc_ref = db.collection(f'{site_name}-processing_state').document('woocommerce_orders-gcspage')
+
+#     state_doc = state_doc_ref.get()
+
+#     # Check if the document exists
+#     if state_doc.exists:
+#         last_processed_page = state_doc.to_dict().get('last_processed_page', 0)
+#     else:
+#         print(f"No existing document for {site_name}, starting from the beginning.")
+#         last_processed_page = 0
+
+#     # Fetch the next batch of orders in ascending order
+#     current_page = last_processed_page + 1
+#     path_name = f'{site_name}/Orders/Unprocessed/{current_year}/{current_month}'
+
+#     # blobs = storage_client.list_blobs(bucket_name, prefix=path_name, max_results=500)
+#     blobs = storage_client.list_blobs(bucket_name, prefix=path_name)
+
+#     for page in blobs.pages:
+#         for blob in page:
+#             process_blob_to_csv(blob)
+#     # if(blobs):
+#     #     for blob in blobs:
+#     #         process_blob_to_csv(blob)
