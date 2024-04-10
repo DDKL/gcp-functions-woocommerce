@@ -1,3 +1,4 @@
 functions-framework==3.*
 woocommerce
 google.cloud.storage
+dateutil

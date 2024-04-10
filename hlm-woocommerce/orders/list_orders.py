@@ -25,8 +25,8 @@ wcapi = API(
  timeout=60
 )
 
-# Function to process orders
-def process_orders(event, context):
+# Function to list latest 25 orders
+def list_orders(event, context):
     print(f"Processing orders for site: {site_name}")
 
     # Fetch orders from the API
