@@ -32,17 +32,8 @@ wcapi = API(
 )
 
 
-# Function to process orders
-def process_orders(event, context):
-
-    # Decode the Pub/Sub message
-    if 'data' in event:
-        message_data = base64.b64decode(event['data']).decode('utf-8')
-        data = json.loads(message_data)
-        site_name = data.get('site_name') if data else 'iHeartDogs'
-    else:
-        print("No data found in event")
-        return
+# Function to process historical orders
+def list_historical_orders(event, context):
 
     print(f"Processing orders for site: {site_name}")
 
