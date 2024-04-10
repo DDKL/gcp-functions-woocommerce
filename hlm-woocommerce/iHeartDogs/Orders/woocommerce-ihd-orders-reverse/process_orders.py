@@ -79,10 +79,12 @@ def process_orders(event, context):
      # Determine the current date
     num_days = calendar.monthrange(year,month)[1]
     end_date = datetime(year,month,num_days)
-    end_date_str = end_date.strftime('%Y-%m-%dT23:59:59Z')
+    # end_date_str = end_date.strftime('%Y-%m-%dT23:59:59Z') #GMT
+    end_date_str = end_date.strftime('%Y-%m-%dT23:59:59')
 
     start_date = datetime(year,month,1)
-    start_date_str = start_date.strftime('%Y-%m-%dT00:00:00Z')
+    # start_date_str = start_date.strftime('%Y-%m-%dT00:00:00Z') #GMT
+    start_date_str = start_date.strftime('%Y-%m-%dT00:00:00')
 
     # Fetch orders from the API
     orders = wcapi.get("orders", params={

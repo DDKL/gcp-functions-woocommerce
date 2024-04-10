@@ -3,35 +3,32 @@ import os
 import json
 from google.cloud import storage
 from woocommerce import API
-from datetime import datetime
+from dateutil import parser # Import parser from dateutil
 
 # Initialize
 storage_client = storage.Client()
 bucket_name = os.environ.get('bucket_name')
 bucket = storage_client.get_bucket(bucket_name)
-site_name = 'Cannanine'
+site_name = os.environ.get('site_name')
+site_url = os.environ.get('site_url')
+
 
 key = os.environ.get('consumer_key')
 secret = os.environ.get('consumer_secret')
 
-current_year, current_month = datetime.now().year, datetime.now().month
-
 wcapi = API(
-  url="https://cannanine.com",
-  consumer_key=key,
-  consumer_secret=secret,
-  wp_api=True,
-  version="wc/v3",
-  timeout=60
+ url=site_url,
+ consumer_key=key,
+ consumer_secret=secret,
+ wp_api=True,
+ version="wc/v3",
+ timeout=60
 )
-
 
 # Function to process orders
 def process_orders(event, context):
-
     print(f"Processing orders for site: {site_name}")
 
-    
     # Fetch orders from the API
     orders = wcapi.get("orders", params={
         "per_page": 25
@@ -41,7 +38,10 @@ def process_orders(event, context):
 
     if len(orders) > 0:
         for order in orders:
-            order_id = order['id']  # Assuming each order has a unique 'id'
+            order_id = order['id'] # Assuming each order has a unique 'id'
+            # Parse the date_created string to get a datetime object
+            date_created = parser.isoparse(order['date_created'])
+            current_year, current_month = date_created.year, date_created.month
             blob = bucket.blob(f'{site_name}/Orders/Unprocessed/{current_year}/{current_month}/{order_id}.json')
             # Store the order in the bucket
             try:
