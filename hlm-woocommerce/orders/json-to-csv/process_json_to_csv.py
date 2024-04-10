@@ -16,8 +16,18 @@ bucket = storage_client.bucket(bucket_name)
 
 site_name = os.environ.get('site_name')
 
-payment_methods = os.environ.get('payment_methods')
-payment_methods = ast.literal_eval(payment_methods)
+payment_methods_str = os.environ.get('payment_methods')
+
+if payment_methods_str:
+    try:
+        # Convert the string representation of the dictionary back to a dictionary
+        payment_methods = ast.literal_eval(payment_methods_str)
+    except (ValueError, SyntaxError):
+        print("Error: The environment variable 'payment_methods' does not contain a valid dictionary.")
+        # Handle the error appropriately
+else:
+    print("Error: Environment variable 'payment_methods' is not set.")
+    # Handle the missing environment variable appropriately
 
 current_year, current_month = datetime.now().year, datetime.now().month
 current_year, current_month = datetime.now().year, 3
