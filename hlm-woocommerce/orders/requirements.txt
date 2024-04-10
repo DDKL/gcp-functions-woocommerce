@@ -1,4 +1,4 @@
 functions-framework==3.*
 woocommerce
 google.cloud.storage
-dateutil
+python-dateutil==2.8.2
