@@ -3,3 +3,4 @@ pandas==2.2.0
 numpy
 gcsfs
 google.cloud.storage
+google.cloud.firestore

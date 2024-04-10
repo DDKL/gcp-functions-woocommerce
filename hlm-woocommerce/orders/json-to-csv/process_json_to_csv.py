@@ -12,11 +12,10 @@ storage_client = storage.Client()
 db = firestore.Client()
 
 bucket_name = os.environ.get('bucket_name')
-bucket = storage_client.bucket(bucket_name)
-
 site_name = os.environ.get('site_name')
-
 payment_methods_str = os.environ.get('payment_methods')
+
+bucket = storage_client.bucket(bucket_name)
 
 if payment_methods_str:
     try:
