@@ -1,0 +1,85 @@
+{
+    "BigQuery Schema": [
+      {
+        "name": "id",
+        "type": "INTEGER"
+      },
+      {
+        "name": "status",
+        "type": "STRING"
+      },
+      {
+        "name": "currency",
+        "type": "STRING"
+      },
+      {
+        "name": "discount_total",
+        "type": "FLOAT"
+      },
+      {
+        "name": "shipping_total",
+        "type": "FLOAT"
+      },
+      {
+        "name": "total",
+        "type": "FLOAT"
+      },
+      {
+        "name": "total_tax",
+        "type": "FLOAT"
+      },
+      {
+        "name": "customer_id",
+        "type": "INTEGER"
+      },
+      {
+        "name": "payment_method",
+        "type": "STRING"
+      },
+      {
+        "name": "date_created_gmt",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "date_modified_gmt",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "date_completed_gmt",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "date_paid_gmt",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "date_created",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "date_modified",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "date_completed",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "date_paid",
+        "type": "TIMESTAMP"
+      },
+      {
+        "name": "total_cogs",
+        "type": "FLOAT"
+      },
+      {
+        "name": "total_refunds",
+        "type": "FLOAT"
+      },
+      {
+        "name": "transaction_cost",
+        "type": "FLOAT"
+      }
+    ]
+  }
+  
