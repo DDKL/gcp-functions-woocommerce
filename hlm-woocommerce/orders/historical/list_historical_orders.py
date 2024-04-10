@@ -19,9 +19,11 @@ bucket = storage_client.get_bucket(bucket_name)
 
 key = os.environ.get('consumer_key')
 secret = os.environ.get('consumer_secret')
+site_name = os.environ.get('site_name')
+site_url = os.environ.get('site_url')
 
 wcapi = API(
-  url='https://iheartdogs.com',
+  url=site_url,
   consumer_key=key,
   consumer_secret=secret,
   wp_api=True,

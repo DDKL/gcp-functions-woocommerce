@@ -1,0 +1,48 @@
+IHD:
+payment_methods = {
+    "afterpay": 7,
+    "amazon_payments_advanced": 3.8,
+    "authorize_net_cim_credit_card": 2.75,
+    "cheque": 0,
+    "first_data_payeezy_credit_card": 0,
+    "other": 0,
+    "paypal": 2.9,
+    "ppec_paypal": 2.9,
+    "simplify_commerce": 0,
+    "square_credit_card": 2.6,
+    "wc_autoship_authorize_net": 2.75,
+    "wc_autoship_authorize_net_cbd": 2.75,
+    "ppcp-gateway": 0,
+    "wpfi_test": 0
+}
+
+IHC:
+payment_methods = {
+    "afterpay": 7,
+    "amazon_payments_advanced": 3.8,
+    "authorize_net_cim_credit_card": 2.75,
+    "cheque": 0,
+    "first_data_payeezy_credit_card": 0,
+    "other": 0,
+    "paypal": 2.9,
+    "ppec_paypal": 2.9,
+    "simplify_commerce": 0,
+    "square_credit_card": 2.8,
+    "wc_autoship_authorize_net": 2.75,
+    "wc_autoship_authorize_net_cbd": 2.75,
+    "ppcp-gateway": 0,
+    "wpfi_test": 0
+}
+
+CAN:
+payment_methods = { 
+    "authorize_net_cim_credit_card": 2.75,
+    "authorize_net_cim_echeck": 2.75,
+    "nmi": 0,
+    "square": 3.2,
+    "square_credit_card": 3.2,
+    "wc_autoship_authorize_net": 2.75,
+    "wc_autoship_authorize_net_cbd": 2.75,
+    "other": 0,
+    "wpfi_test": 0
+}
