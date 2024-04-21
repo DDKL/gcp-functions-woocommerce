@@ -6,7 +6,7 @@ from google.cloud import firestore
 from google.cloud import scheduler_v1
 from google.cloud import storage
 from woocommerce  import API
-from dateutil     import parser # Import parser from dateutil
+from dateutil     import parser
 from datetime     import datetime, timedelta
 
 # Initialize
