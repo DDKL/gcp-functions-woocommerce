@@ -93,6 +93,6 @@ def process_woocommerce_orders_by_date(event, context):
                 print(f"Error uploading order {order_id}: {e}")
     else:
         print("No orders found - canceling pulls")
-        pause_scheduler_job()
+        # pause_scheduler_job()
         page_doc_ref.set({'last_processed_page': 0}, merge=True)  # Using merge=True to update specific field
         print("Successfully reset 'last_processed_page' to 0.")
