@@ -1,0 +1,7 @@
+<<<<<<< HEAD:hlm-shopify/process_yesterday_shopify_orders/requirements.txt
+functions-framework==3.*
+google.cloud.storage
+python-dateutil==2.8.2
+pytz
+=======
+>>>>>>> parent of db01253 (Edit functions names and implement shopify funcionality):hlm-shopify/processs-shopify-orders-by-date/requirements.txt
