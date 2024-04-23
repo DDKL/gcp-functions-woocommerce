@@ -75,6 +75,8 @@ def process_woocommerce_orders_by_date(event, context):
         "per_page": 50
     }).json()
 
+    
+
     if len(orders) > 0:
         for order in orders:
             order_id = order['id'] # Assuming each order has a unique 'id'
@@ -82,6 +84,8 @@ def process_woocommerce_orders_by_date(event, context):
             date_created = parser.isoparse(order['date_created_gmt'])
             current_year, current_month = date_created.year, date_created.month
             blob = bucket.blob(f'{software_name}/orders/{current_year}/{current_month}/{order_id}.json')
+            # Update the page in Firestore
+            page_doc_ref.set({'last_processed_page': current_page})
             # Store the order in the bucket
             try:
                 blob.upload_from_string(json.dumps(order))
