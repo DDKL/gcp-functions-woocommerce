@@ -32,7 +32,7 @@ def pause_scheduler_job():
     print(f"Paused Cloud Scheduler job: {scheduler_job_name}")
 
 
-def process_woocommerce_orders_by_date(event, context):
+def process_yesterday_woocommerce_orders(event, context):
     print(f"Processing orders for {bucket_name} - {software_name}")
 
     wcapi = API(
