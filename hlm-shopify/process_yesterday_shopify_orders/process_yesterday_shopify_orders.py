@@ -25,7 +25,7 @@ headers = {
 }
 
 
-def process_yesterday_shopify_orders():
+def process_yesterday_shopify_orders(a, b):
 
     # Set the timezone to PST/PDT
     pst_tz = pytz.timezone('America/Los_Angeles')
