@@ -1,25 +1,18 @@
 import functions_framework
+import os
 import pandas as pd 
-from datetime import datetime
-from google.cloud import storage
-from google.cloud import firestore
 import os
 import json
 import ast
+from google.cloud import storage
 
-# Initialize Google Cloud Storage client
+# Initialize the storage client
 storage_client = storage.Client()
-db = firestore.Client()
 
-# bucket_name = os.environ.get('bucket_name')
 site_initials = os.environ.get('site_initials') # must be either ihd, ihc, or can
+destination_bucket_name = f'data-{site_initials}-processed'  # Destination bucket name
+
 payment_methods_str = os.environ.get('payment_methods')
-
-bucket_name = f"data-{site_initials}-raw"
-bucket_name_processed = f"data-{site_initials}-processed"
-
-bucket = storage_client.bucket(bucket_name)
-bucket_processed = storage_client.bucket(bucket_name_processed)
 
 if payment_methods_str:
     try:
@@ -32,7 +25,7 @@ else:
     print("Error: Environment variable 'payment_methods' is not set.")
     # Handle the missing environment variable appropriately
 
-current_year, current_month = datetime.now().year, datetime.now().month
+
 
 def extract_wc_cog_order_total_cost(row):
     for item in row:
@@ -62,13 +55,28 @@ def calculate_transaction_costs(total, payment_method):
     return round(transaction_cost, 2)
 
 
-def process_blob_to_csv(blob):
-    # Read JSON data from blob
-    json_bytes = blob.download_as_bytes()
+@functions_framework.cloud_event
+def process_json_to_csv_gcstrig(cloud_event):
+    data = cloud_event.data
 
+    # Extract file details from the event data
+    source_bucket_name = data['bucket']
+    file_name = data['name']
+
+    # Ensure the file is a JSON file
+    if not file_name.endswith('.json'):
+        print(f"Skipped non-JSON file: {file_name}")
+        return
+
+    # Get the source bucket and blob
+    source_bucket = storage_client.bucket(source_bucket_name)
+    blob = source_bucket.blob(file_name)
+
+    # Download JSON data from the blob
+    json_bytes = blob.download_as_bytes()
     data = json.loads(json_bytes.decode('utf-8'))
-    
-    # Convert JSON to Pandas DataFrame
+
+    # Convert JSON to PD dataframe
     df = pd.json_normalize(data)
 
     # Process DataFrame (e.g., drop columns, transform, etc.)
@@ -89,39 +97,23 @@ def process_blob_to_csv(blob):
 
     # Convert DataFrame to CSV
     csv_string = df.to_csv(index=False)
-    
-    # Define new path for the processed CSV
-    new_path = blob.name.replace('Unprocessed', 'Processed/Finance')
-    
-    # Upload to Cloud Storage as CSV
-    csv_blob = bucket.blob(new_path.replace('.json', '.csv'))
-    csv_blob.upload_from_string(csv_string, content_type='text/csv')
 
+    # Define new path for the processed CSV, replacing the file extension
+    new_path = file_name.replace('.json', '.csv')
 
-@functions_framework.cloud_event
-def process_json_to_csv(cloud_event):
-    state_doc_ref = db.collection(f'{site_initials}-processing_state').document('woocommerce_orders-gcspage')
-    state_doc = state_doc_ref.get()
+    # Get the destination bucket and create a new blob
+    destination_bucket = storage_client.bucket(destination_bucket_name)
+    new_blob = destination_bucket.blob(new_path)
 
-    # Check if the Firestore document exists
-    if state_doc.exists:
-        last_processed_blob = state_doc.to_dict().get('last_processed_blob', '')
-    else:
-        print(f"No existing document for {site_initials}, starting from the beginning.")
-        last_processed_blob = ''
+    # Upload the CSV data
+    new_blob.upload_from_string(csv_string, content_type='text/csv')
 
-    path_name = f'woocommerce/orders/{current_year}/{current_month}/'
-    blobs = storage_client.list_blobs(bucket_name, prefix=path_name)
-    file_count = 0
+    print(f"File {file_name} converted to CSV and uploaded to {destination_bucket_name} as {new_path}.")
 
-    for blob in blobs:
-        # Process only if the blob is after the last processed one
-        if blob.name > last_processed_blob:
-            process_blob_to_csv(blob)
-            last_processed_blob = blob.name
-            file_count += 1
-            if file_count >= 1000:
-                break
+    # Get the destination bucket
+    destination_bucket = storage_client.bucket(destination_bucket_name)
 
-    # Update the last processed blob in Firestore
-    state_doc_ref.set({'last_processed_blob': last_processed_blob})
+    # Copy the blob to the new bucket
+    new_blob = source_bucket.copy_blob(blob, destination_bucket, file_name)
+
+    print(f"File {file_name} copied to {destination_bucket_name}.")
