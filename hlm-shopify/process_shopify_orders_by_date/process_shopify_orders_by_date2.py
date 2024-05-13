@@ -15,8 +15,9 @@ api_version = "2024-04"
 bucket_name        = os.environ.get('bucket_name')
 access_token       = os.environ.get('access_token')
 shop_name          = os.environ.get('shop_name')
-# software_name      = os.environ.get('software_name')
 site_name          = os.environ.get('site_name')
+after_date         = os.environ.get('after_date')  # Example usage - '2024-04-22'
+before_date        = os.environ.get('before_date') # Example usage - '2024-04-22'
 
 site_url           = f"https://{shop_name}.myshopify.com/admin/api/{api_version}/orders.json"
 bucket             = storage_client.get_bucket(bucket_name)
@@ -31,13 +32,14 @@ def process_yesterday_shopify_orders(a, b):
     # Set the timezone to PST/PDT
     pst_tz = pytz.timezone('America/Los_Angeles')
     
-    # Get the current time in PST
-    today = datetime.now(pst_tz)
-    yesterday = today - timedelta(days=1)
+    # Convert after_date and before_date from string to datetime object
+    after_datetime = datetime.strptime(after_date, '%Y-%m-%d').replace(tzinfo=pst_tz)
+    before_datetime = datetime.strptime(before_date, '%Y-%m-%d').replace(tzinfo=pst_tz)
 
     # Format the dates in ISO 8601 format with timezone information
-    after = yesterday.strftime('%Y-%m-%dT00:00:00%z')
-    before = yesterday.strftime('%Y-%m-%dT23:59:59%z')
+    # Since the dates are without time, set the start of 'after' and the end of 'before'
+    after = after_datetime.strftime('%Y-%m-%dT00:00:00%Z')
+    before = before_datetime.strftime('%Y-%m-%dT23:59:59%Z')
 
     # utc          = pytz.UTC
     # today        = datetime.now(utc)
@@ -68,9 +70,8 @@ def process_yesterday_shopify_orders(a, b):
                     continue  # Skip this order if no number is available
                 
                 date_created = parser.isoparse(order['created_at'])
-                current_year, current_month = date_created.year, date_created.month
-                # blob = bucket.blob(f'{software_name}/orders/{current_year}/{current_month}/{order_number}.json')
-                blob = bucket.blob(f'{site_name}/Orders/Unprocessed/{current_year}/{current_month}/{order_number}.json')
+                year, month = date_created.year, date_created.month
+                blob = bucket.blob(f'{site_name}/Orders/Unprocessed/{year}/{month}/{order_number}.json')
                 blob.upload_from_string(json.dumps(order), content_type='application/json')
                 processed_count += 1  # Increment the processed order count
                 

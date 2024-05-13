@@ -8,7 +8,21 @@ from apache_beam import PCollection
 from apache_beam.io import fileio
 from apache_beam.io.filesystem import CompressionTypes
 from apache_beam.io.filesystems import FileSystems as beam_fs
+from apache_beam.options.pipeline_options import PipelineOptions
 
+class TemplateOptions(PipelineOptions):
+    @classmethod
+    def _add_argparse_args(cls, parser):
+        parser.add_value_provider_argument('--input', type=str, help='Input file pattern')
+        parser.add_value_provider_argument('--output', type=str, help='Output file pattern')
+
+pipeline_options = PipelineOptions([
+    '--project=homelife-analytics',
+    '--staging_location=gs://tmp4130/staging_location',
+    '--temp_location=gs://tmp4130/temp_location',
+    '--template_location=gs://hlm-dataflow/dataflow-csv-to-bigquery',
+    '--runner=DataflowRunner'
+])
 
 class ReadCsvFiles(beam.PTransform):
 
