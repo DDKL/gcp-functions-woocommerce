@@ -1,22 +1,30 @@
-import functions_framework
-import pandas as pd 
+# import functions_framework
+import pandas as pd
 from datetime import datetime
 from google.cloud import storage
 from google.cloud import firestore
-import os
 import json
+import requests
+import time
 import ast
+import os
 
 # Initialize Google Cloud Storage client
 storage_client = storage.Client()
 db = firestore.Client()
 
-# bucket_name = os.environ.get('bucket_name')
+# Set environment variables
+
 site_name = os.environ.get('site_name')
 payment_methods_str = os.environ.get('payment_methods')
+shopify_store = os.environ.get('shopify_store')
+shopify_token = os.environ.get('shopify_token')
 bucket_name = os.environ.get('bucket_name')
 bucket = storage_client.get_bucket(bucket_name)
 
+api_version = "2024-04"
+
+current_year, current_month = datetime.now().year, datetime.now().month
 
 if payment_methods_str:
     try:
@@ -29,91 +37,98 @@ else:
     print("Error: Environment variable 'payment_methods' is not set.")
     # Handle the missing environment variable appropriately
 
-current_year, current_month = datetime.now().year, datetime.now().month
-
-def extract_wc_cog_order_total_cost(row):
-    for item in row:
-        if item['key'] == '_wc_cog_order_total_cost':
-            return item['value']
+def get_inventory_item_id(product_id):
+    url = f'https://{shopify_store}.myshopify.com/admin/api/{api_version}/products/{product_id}/variants.json'
+    headers = {'X-Shopify-Access-Token': shopify_token}
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        variants = response.json().get('variants', [])
+        if variants:
+            return variants[0].get('inventory_item_id')
+    except requests.RequestException as e:
+        print(f"Error fetching inventory item ID for product {product_id}: {e}")
     return None
 
-
-def extract_total_refunds(row):
-    # If there's exactly one refund entry
-    if len(row) == 1:
-        print('refund found')
-        # Convert to absolute value to remove negative sign
-        return abs(float(row[0].get('total', 0)))
-    # If there are two or more refund entries, sum their totals
-    elif len(row) >= 2:
-        print('refunds found')
-        # Convert each total to absolute value and sum them
-        return sum(abs(float(refund.get('total', 0))) for refund in row)
-    # Default value if no refunds
+def get_cost(inventory_item_id):
+    url = f'https://{shopify_store}.myshopify.com/admin/api/{api_version}/inventory_items/{inventory_item_id}.json'
+    headers = {'X-Shopify-Access-Token': shopify_token}
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        inventory_item = response.json().get('inventory_item', {})
+        cost = inventory_item.get('cost', 0)
+        return float(cost) if cost is not None else 0
+    except requests.RequestException as e:
+        print(f"Error fetching cost for inventory item {inventory_item_id}: {e}")
     return 0
 
+def calculate_cost_of_goods(order):
+    total_cost = 0
+    for item in order.get('line_items', []):
+        product_id = item.get('product_id')
+        quantity = item.get('quantity', 1)
+        if product_id:
+            inventory_item_id = get_inventory_item_id(product_id)
+            if inventory_item_id:
+                cost = get_cost(inventory_item_id)
+                total_cost += cost * quantity
+    return total_cost
 
 def calculate_transaction_costs(total, payment_method):
     rate = payment_methods.get(payment_method, 0) / 100  # Convert percentage to a decimal
     transaction_cost = float(total) * rate
-    transaction_cost = 0.3
+    if payment_method in ['shopify_installments', 'shopify_payments']:
+        transaction_cost += 0.3
     return round(transaction_cost, 2)
 
 
 def process_blob_to_csv(blob):
-    # Read JSON data from blob
     json_bytes = blob.download_as_bytes()
+    data_str = json_bytes.decode('utf-8')
 
-    data = json.loads(json_bytes.decode('utf-8'))
-    
-    # Convert JSON to Pandas DataFrame
+    try:
+        data = json.loads(data_str)
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from blob {blob.name}: {e}")
+        return
+
+    # If the data is a dictionary, convert it to a list
+    if isinstance(data, dict):
+        data = [data]
+
+    for order in data:
+        order['cost_of_goods'] = calculate_cost_of_goods(order)
+        time.sleep(1)  # Add 1 second delay between processing each order
+
     df = pd.json_normalize(data)
 
-    # Process DataFrame (e.g., drop columns, transform, etc.)
-    df['total_cogs'] = df['meta_data'].apply(extract_wc_cog_order_total_cost)
-    df['total_refunds'] = df['refunds'].apply(extract_total_refunds)
-    df['transaction_cost'] = df.apply(lambda row: calculate_transaction_costs(pd.to_numeric(row['total']), row['payment_method']), axis=1)
-
+    df['transaction_cost'] = df.apply(lambda row: calculate_transaction_costs(pd.to_numeric(row['total_price']), row['payment_gateway_names'][0]), axis=1)
+    
     selected_columns = [
-        "id", "status", "currency", "discount_total", "shipping_total",
-        "total", "total_tax", "customer_id", "payment_method",
-        "date_created_gmt", "date_modified_gmt", "date_completed_gmt",
-        "date_paid_gmt", "date_created", "date_modified",
-        "date_completed", "date_paid", "total_cogs", "total_refunds",
+        "id", "created_at", "currency", "total_price", "subtotal_price",
+        "total_tax", "cancelled_at", "closed_at", "confirmed", "order_number",
+        "payment_gateway_names", "processed_at", "total_discounts", "cost_of_goods",
         "transaction_cost"
     ]
 
     df = df[selected_columns]
 
-    # Convert DataFrame to CSV
     csv_string = df.to_csv(index=False)
-    
-    # Define new path for the processed CSV
-    new_path = blob.name.replace('Unprocessed', 'Processed/Finance')
-    
-    # Upload to Cloud Storage as CSV
+    new_path = blob.name.replace('Unprocessed', 'Processed/Finance-test')
     csv_blob = bucket.blob(new_path.replace('.json', '.csv'))
     csv_blob.upload_from_string(csv_string, content_type='text/csv')
 
-
-@functions_framework.cloud_event
-def process_json_to_csv(cloud_event):
-    state_doc_ref = db.collection(f'{site_name}-processing_state').document('woocommerce_orders-gcspage')
+def process_json_to_csv():
+    state_doc_ref = db.collection(f'{site_name}-processing_state').document('shopify_orders-gcspage')
     state_doc = state_doc_ref.get()
 
-    # Check if the Firestore document exists
-    if state_doc.exists:
-        last_processed_blob = state_doc.to_dict().get('last_processed_blob', '')
-    else:
-        print(f"No existing document for {site_name}, starting from the beginning.")
-        last_processed_blob = ''
-
+    last_processed_blob = state_doc.to_dict().get('last_processed_blob', '') if state_doc.exists else ''
     path_name = f'{site_name}/Orders/Unprocessed/{current_year}/{current_month}/'
     blobs = storage_client.list_blobs(bucket_name, prefix=path_name)
     file_count = 0
 
     for blob in blobs:
-        # Process only if the blob is after the last processed one
         if blob.name > last_processed_blob:
             process_blob_to_csv(blob)
             last_processed_blob = blob.name
@@ -121,5 +136,4 @@ def process_json_to_csv(cloud_event):
             if file_count >= 1000:
                 break
 
-    # Update the last processed blob in Firestore
     state_doc_ref.set({'last_processed_blob': last_processed_blob})
