@@ -143,7 +143,7 @@ def process_json_to_csv(event, context):
             process_blob_to_csv(blob)
             last_processed_blob = blob.name
             file_count += 1
-            if file_count >= 1000:
+            if file_count >= 200:
                 break
 
     state_doc_ref.set({'last_processed_blob': last_processed_blob})
