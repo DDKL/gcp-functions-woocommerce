@@ -1,0 +1,79 @@
+{
+  "BigQuery Schema": [
+    {
+        "name": "id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+    },
+    {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "currency",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "total_price",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "subtotal_price",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "total_tax",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "cancelled_at",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "closed_at",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "confirmed",
+        "type": "BOOLEAN",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "order_number",
+        "type": "INTEGER",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "payment_gateway_names",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "processed_at",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "total_discounts",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "cost_of_goods",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "transaction_cost",
+        "type": "FLOAT",
+        "mode": "NULLABLE"
+    }
+]
+}

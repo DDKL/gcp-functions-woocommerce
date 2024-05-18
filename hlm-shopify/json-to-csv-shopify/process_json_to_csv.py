@@ -103,7 +103,17 @@ def process_blob_to_csv(blob):
 
     df = pd.json_normalize(data)
 
-    df['transaction_cost'] = df.apply(lambda row: calculate_transaction_costs(pd.to_numeric(row['total_price']), row['payment_gateway_names'][0]), axis=1)
+    def get_transaction_cost(row):
+        total_price = pd.to_numeric(row['total_price'])
+        payment_methods_list = row.get('payment_gateway_names', [])
+        if payment_methods_list:
+            payment_method = payment_methods_list[0]
+        else:
+            payment_method = None
+        return calculate_transaction_costs(total_price, payment_method)
+
+    df['transaction_cost'] = df.apply(get_transaction_cost, axis=1)
+    # df['transaction_cost'] = df.apply(lambda row: calculate_transaction_costs(pd.to_numeric(row['total_price']), row['payment_gateway_names'][0]), axis=1)
     
     selected_columns = [
         "id", "created_at", "currency", "total_price", "subtotal_price",
@@ -115,7 +125,7 @@ def process_blob_to_csv(blob):
     df = df[selected_columns]
 
     csv_string = df.to_csv(index=False)
-    new_path = blob.name.replace('Unprocessed', 'Processed/Finance-test')
+    new_path = blob.name.replace('Unprocessed', 'Processed/Finance')
     csv_blob = bucket.blob(new_path.replace('.json', '.csv'))
     csv_blob.upload_from_string(csv_string, content_type='text/csv')
 
