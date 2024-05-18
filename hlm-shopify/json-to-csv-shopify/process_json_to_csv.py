@@ -129,7 +129,7 @@ def process_blob_to_csv(blob):
     csv_blob = bucket.blob(new_path.replace('.json', '.csv'))
     csv_blob.upload_from_string(csv_string, content_type='text/csv')
 
-def process_json_to_csv():
+def process_json_to_csv(event, context):
     state_doc_ref = db.collection(f'{site_name}-processing_state').document('shopify_orders-gcspage')
     state_doc = state_doc_ref.get()
 
