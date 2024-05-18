@@ -53,7 +53,7 @@
     {
         "name": "payment_gateway_names",
         "type": "STRING",
-        "mode": "REPEATED"
+        "mode": "NULLABLE"
     },
     {
         "name": "processed_at",
