@@ -21,7 +21,7 @@ headers = {
 
 # Triggered from a message on a Cloud Pub/Sub topic.
 @functions_framework.cloud_event
-def list_shipments(event):
+def list_shipments(cloud_event):
     response = requests.get(url, headers=headers)
 
     # Print the server response for debugging
@@ -34,6 +34,8 @@ def list_shipments(event):
         createDate = shipment.get('createDate')
         
         if createDate:
+            # Truncate the createDate to match the expected format
+            createDate = createDate[:26]  # Keep up to microseconds            
             # Parse the createDateStart to extract year and month
             createDate = datetime.strptime(createDate, '%Y-%m-%dT%H:%M:%S.%f')
             year = createDate.year
