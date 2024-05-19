@@ -23,6 +23,10 @@ headers = {
 @functions_framework.cloud_event
 def list_shipments(event):
     response = requests.get(url, headers=headers)
+
+    # Print the server response for debugging
+    print("Server response:", response.text)
+
     shipments = response.json().get('shipments', [])
 
     for shipment in shipments:
