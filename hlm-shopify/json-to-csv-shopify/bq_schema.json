@@ -74,6 +74,11 @@
         "name": "transaction_cost",
         "type": "FLOAT",
         "mode": "NULLABLE"
+    },
+    {
+        "name": "financial_status",
+        "type": "STRING",
+        "mode": "NULLABLE"
     }
 ]
 }
