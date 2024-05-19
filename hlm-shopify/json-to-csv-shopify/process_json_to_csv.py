@@ -119,7 +119,7 @@ def process_blob_to_csv(blob):
         "id", "created_at", "currency", "total_price", "subtotal_price",
         "total_tax", "cancelled_at", "closed_at", "confirmed", "order_number",
         "payment_gateway_names", "processed_at", "total_discounts", "cost_of_goods",
-        "transaction_cost"
+        "transaction_cost", "financial_status"
     ]
 
     df = df[selected_columns]
